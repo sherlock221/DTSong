@@ -7,20 +7,22 @@ import (
 	"DTSong/const"
 	"github.com/tidwall/gjson"
 	"DTSong/model"
-	"os"
 
+	"os"
 	url2 "net/url"
 )
+
+
 
 type App struct{}
 
 func (this *App) Start() {
 
 	var url string
-	//fmt.Println("Please enter your song URL")
-	//fmt.Scanln(&url)
-	//fmt.Println("url is : %s", url)
-	url = "http://m.kugou.com/share/zlist.html?listid=2&type=0&uid=725617981&token=4d029e9bb3216ca221367035ca65203b62d4c1d96003500aa69dac8a51980d78&sign=640957d14c669d07f6bdb42bb4272b34&_t=1513488218&chl=wechat&from=singlemessage&isappinstalled=0";
+	fmt.Println("Please enter your song URL")
+	fmt.Scanln(&url)
+	fmt.Println("url is : %s", url)
+	//url = "http://m.kugou.com/share/zlist.html?listid=2&type=0&uid=725617981&token=4d029e9bb3216ca221367035ca65203b62d4c1d96003500aa69dac8a51980d78&sign=640957d14c669d07f6bdb42bb4272b34&_t=1513488218&chl=wechat&from=singlemessage&isappinstalled=0";
 	songList := this.ParseUrl(url);
 	if songList != nil {
 		this.DownloadRes(songList)
@@ -29,16 +31,23 @@ func (this *App) Start() {
 
 //下载文件
 func (this *App) DownloadRes(songList []model.Song) {
+	var dir string
+	if _const.ENV == "pro" {
+		dir = util.GetCurrentPath() + "DTSongRes"
+	}else {
+		dir, _ = os.Getwd()
+		dir += "/DTSongRes"
+	}
 
-	dir, _ := os.Getwd()
-	dir += "/DTSongRes"
+	fmt.Println("解析完成开始下载,下载目录为-->", dir)
+
 
 	//下载失败列表
 	failArray := []string{}
 
 	if len(songList) > 0 {
 		err := os.MkdirAll(dir, 0777)
-		fmt.Println("解析完成开始下载,下载目录为-->",dir)
+		fmt.Println("解析完成开始下载,下载目录为-->", dir)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -63,8 +72,6 @@ func (this *App) DownloadRes(songList []model.Song) {
 func (this *App) ParseUrl(url string) ([]model.Song) {
 
 	isUrl, err := regexp.Match("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]", []byte(url))
-
-
 
 	if !isUrl || err != nil {
 		fmt.Println("url 格式错误!")
@@ -103,8 +110,6 @@ func (this *App) ParseUrl(url string) ([]model.Song) {
 
 	var songList []model.Song
 
-
-
 	for i := 0; i < len(list); i++ {
 		obj := list[i]
 		song := model.Song{}
@@ -116,7 +121,7 @@ func (this *App) ParseUrl(url string) ([]model.Song) {
 		infoParams["cmd"] = "playInfo"
 		infoParams["is_share"] = "1"
 
-		fmt.Printf("加载用户歌曲详情%v/%v\n",i+1,len(list))
+		fmt.Printf("加载用户歌曲详情%v/%v\n", i+1, len(list))
 
 		//加载歌曲详情
 		infoRes, err := util.GetUrl(_const.GET_USER_MUSIC_INFO, infoParams)
